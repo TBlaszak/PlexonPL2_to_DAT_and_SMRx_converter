@@ -10,8 +10,9 @@ clear;
 % All channels will go to Spike2 .smrx file
 
 FilterData = true;
-SubtractMean = true;
-SubtractBy = 'SHK'; %'MEA', 'SHK' - determines if mean of wholle MEA or mean of Shanks is subtracted from channels (on shanks)
+Subtract = 'median';  %'mean', 'median' oe 'none' - determines what (if anything) will be subtracted from signal on channels
+
+SubtractBy = 'MEA'; %'MEA', 'SHK' - determines if mean of wholle MEA or mean of Shanks is subtracted from channels (on shanks)
 
 smrxSPKCnoOffset = 0;   %z tum offsetem bêda numerowane kana³y SPKC (pochodne WB)
 smrxAInoOffset = 100;   %z tum offsetem bêda numerowane kana³y AI 
@@ -131,28 +132,50 @@ if FilterData
     rawWBdata = filter (dfilter, rawWBdata);
 end
 
-%% Subtract mean of all WB channels from WB channels, if You wish - note, that it is after filtering
-if SubtractMean
-    switch SubtractBy
-        case 'MEA'
-            Speak(SpeachObj, 'Specjalnie dla Ciebie Kotku odejmujê uœredniony sygna³ ca³ej macierzy od ka¿dego kana³u');
-            meanWBdata = mean (rawWBdata, 2);
-            rawWBdata = rawWBdata - meanWBdata;
-        case 'SHK'
-            channelsOnSHK1 = [1:4:32];
-            channelsOnSHK2 = [2:4:32];
-            channelsOnSHK3 = [3:4:32];
-            channelsOnSHK4 = [4:4:32];
-            Speak(SpeachObj, 'Kiciuœ, odejmujê uœredniony sygna³ ca³ego szanka od kana³ów na tym szanku');
-            meanWBdata = mean (rawWBdata (:, channelsOnSHK1), 2);    % shank 1
-            rawWBdata (:, channelsOnSHK1) = rawWBdata (:, channelsOnSHK1) - meanWBdata;
-            meanWBdata = mean (rawWBdata (:, channelsOnSHK2), 2);    % shank 2
-            rawWBdata (:, channelsOnSHK2) = rawWBdata (:, channelsOnSHK2) - meanWBdata;
-            meanWBdata = mean (rawWBdata (:, channelsOnSHK3), 2);    % shank 3
-            rawWBdata (:, channelsOnSHK3) = rawWBdata (:, channelsOnSHK3) - meanWBdata;
-            meanWBdata = mean (rawWBdata (:, channelsOnSHK4), 2);    % shank 4
-            rawWBdata (:, channelsOnSHK4) = rawWBdata (:, channelsOnSHK4) - meanWBdata;
-    end
+%% Subtract mean or median of all WB channels from WB channels, if You wish - note, that it is after filtering
+switch Subtract
+    case 'mean'
+        switch SubtractBy
+            case 'MEA'
+                Speak(SpeachObj, 'Especially for You Darling, I subtract from each channel mean signal of a whole MEA');
+                meanWBdata = mean (rawWBdata, 2);
+                rawWBdata = rawWBdata - meanWBdata;
+            case 'SHK'
+                channelsOnSHK1 = [1:4:32];
+                channelsOnSHK2 = [2:4:32];
+                channelsOnSHK3 = [3:4:32];
+                channelsOnSHK4 = [4:4:32];
+                Speak(SpeachObj, 'Kiciuœ, odejmujê uœredniony sygna³ ca³ego szanka od kana³ów na tym szanku');
+                meanWBdata = mean (rawWBdata (:, channelsOnSHK1), 2);    % shank 1
+                rawWBdata (:, channelsOnSHK1) = rawWBdata (:, channelsOnSHK1) - meanWBdata;
+                meanWBdata = mean (rawWBdata (:, channelsOnSHK2), 2);    % shank 2
+                rawWBdata (:, channelsOnSHK2) = rawWBdata (:, channelsOnSHK2) - meanWBdata;
+                meanWBdata = mean (rawWBdata (:, channelsOnSHK3), 2);    % shank 3
+                rawWBdata (:, channelsOnSHK3) = rawWBdata (:, channelsOnSHK3) - meanWBdata;
+                meanWBdata = mean (rawWBdata (:, channelsOnSHK4), 2);    % shank 4
+                rawWBdata (:, channelsOnSHK4) = rawWBdata (:, channelsOnSHK4) - meanWBdata;
+        end
+    case 'median'
+        switch SubtractBy
+            case 'MEA'
+                Speak(SpeachObj, 'Especially for You Darling, I subtract from each channel median signal of a whole MEA');
+                medianWBdata = median (rawWBdata, 2);
+                rawWBdata = rawWBdata - medianWBdata;
+            case 'SHK'
+                channelsOnSHK1 = [1:4:32];
+                channelsOnSHK2 = [2:4:32];
+                channelsOnSHK3 = [3:4:32];
+                channelsOnSHK4 = [4:4:32];
+                Speak(SpeachObj, 'Kiciuœ, odejmujê medianê sygna³u ca³ego szanka od kana³ów na tym szanku');
+                medianSHkWBdata = median (rawWBdata (:, channelsOnSHK1), 2);    % shank 1
+                rawWBdata (:, channelsOnSHK1) = rawWBdata (:, channelsOnSHK1) - medianSHkWBdata;
+                medianSHkWBdata = median (rawWBdata (:, channelsOnSHK2), 2);    % shank 2
+                rawWBdata (:, channelsOnSHK2) = rawWBdata (:, channelsOnSHK2) - medianSHkWBdata;
+                medianSHkWBdata = median (rawWBdata (:, channelsOnSHK3), 2);    % shank 3
+                rawWBdata (:, channelsOnSHK3) = rawWBdata (:, channelsOnSHK3) - medianSHkWBdata;
+                medianSHkWBdata = median (rawWBdata (:, channelsOnSHK4), 2);    % shank 4
+                rawWBdata (:, channelsOnSHK4) = rawWBdata (:, channelsOnSHK4) - medianSHkWBdata;
+            end     
 end
 
 %% Make nice and shiny shit for binary file and Spike2 file
