@@ -26,6 +26,8 @@ if CanItalk2U
     NET.addAssembly('System.Speech');
     SpeachObj = System.Speech.Synthesis.SpeechSynthesizer;
     SpeachObj.Volume = 100;
+    SpeachObj.SelectVoice('Microsoft Hazel Desktop'); % You need to add here the string corresponding to the right voice.
+    Speak(SpeachObj, 'Hello darling, you know that I love to heve these conversations with you');
 end
 
 %% read CEDMATLAB librairy
@@ -33,7 +35,7 @@ CEDS64LoadLib('C:\Program Files\MATLAB\R2018a\toolbox\CEDMATLAB\CEDS64ML');
 
 %% Show me the .pl2 file
 if CanItalk2U
-    Speak(SpeachObj, 'Kotek, wskarz mi plik pl2 do przekonwertowania na plik binarny dat dla kilosorta i smrx dla spajka');
+    Speak(SpeachObj, 'Kitty, show me the plexon file You want me to convert for You');
 end    
 [PL2fullfname, PL2fpath] = uigetfile ('*.pl2', 'Select .pl2 file');  %wska¿ plik .pl2
 PL2file = fullfile (PL2fpath, PL2fullfname);
@@ -133,7 +135,9 @@ end
 
 %% Filter WB data, if You wish
 if FilterData   
-    Speak(SpeachObj, 'A teraz filtrujê sygna³, tak jak lubisz');
+    if CanItalk2U
+        Speak(SpeachObj, 'And now I will filter data, as You like');
+    end
     fs = infoWBchannels{1, 5};  % let's assume that all WB chanls are like 1st WB analag channel
     dfilter = designfilt('bandpassiir', 'FilterOrder', 4, 'HalfPowerFrequency1', 300,...
          'HalfPowerFrequency2', 7500, 'SampleRate', fs);
@@ -145,7 +149,9 @@ switch Subtract
     case 'mean'
         switch SubtractBy
             case 'MEA'
-                Speak(SpeachObj, 'Especially for You Darling, I subtract from each channel mean signal of a whole MEA');
+                if CanItalk2U
+                    Speak(SpeachObj, 'Especially for You Darling, I subtract from each channel mean of all channels');
+                end
                 meanWBdata = mean (rawWBdata, 2);
                 rawWBdata = rawWBdata - meanWBdata;
             case 'SHK'
@@ -153,7 +159,9 @@ switch Subtract
                 channelsOnSHK2 = [2:4:32];
                 channelsOnSHK3 = [3:4:32];
                 channelsOnSHK4 = [4:4:32];
-                Speak(SpeachObj, 'Kiciuœ, odejmujê uœredniony sygna³ ca³ego szanka od kana³ów na tym szanku');
+                if CanItalk2U
+                    Speak(SpeachObj, 'My precious, now i subtract from the channells mean of all channels on a given shank');
+                end
                 meanWBdata = mean (rawWBdata (:, channelsOnSHK1), 2);    % shank 1
                 rawWBdata (:, channelsOnSHK1) = rawWBdata (:, channelsOnSHK1) - meanWBdata;
                 meanWBdata = mean (rawWBdata (:, channelsOnSHK2), 2);    % shank 2
@@ -166,7 +174,9 @@ switch Subtract
     case 'median'
         switch SubtractBy
             case 'MEA'
-                Speak(SpeachObj, 'Especially for You Darling, I subtract from each channel median signal of a whole MEA');
+                if CanItalk2U
+                    Speak(SpeachObj, 'Especially for You Darling, I subtract from each channel median of all channels');
+                end
                 medianWBdata = median (rawWBdata, 2);
                 rawWBdata = rawWBdata - medianWBdata;
             case 'SHK'
@@ -174,7 +184,9 @@ switch Subtract
                 channelsOnSHK2 = [2:4:32];
                 channelsOnSHK3 = [3:4:32];
                 channelsOnSHK4 = [4:4:32];
-                Speak(SpeachObj, 'Kiciuœ, odejmujê medianê sygna³u ca³ego szanka od kana³ów na tym szanku');
+                if CanItalk2U
+                    Speak(SpeachObj, 'My precious, now i subtract from the channells median of all channels on a given shank');
+                end
                 medianSHkWBdata = median (rawWBdata (:, channelsOnSHK1), 2);    % shank 1
                 rawWBdata (:, channelsOnSHK1) = rawWBdata (:, channelsOnSHK1) - medianSHkWBdata;
                 medianSHkWBdata = median (rawWBdata (:, channelsOnSHK2), 2);    % shank 2
@@ -195,8 +207,10 @@ niceAIdata = int16(rawAIdata*infoAIchannels{1, 7});      % let's assume that all
 DATfname = sprintf ('%s\\%s.dat', PL2fpath, PL2fname);
 DATfid = fopen (DATfname, 'w');
     if (DATfid == -1)
-        error (['Skarbie, jakoœ nie mogê otworzyæ tego: ',DATfname]);
-        Speak(SpeachObj, 'Skarbie, jakoœ nie mogê otworzyæ tego pliku...');
+        error (['Darling, i can not open this file: ',DATfname]);
+        if CanItalk2U
+            Speak(SpeachObj, 'Oh boy, i can not open this file...');
+        end
     end
 fwrite (DATfid, niceWBdata', 'int16'); %line that writes data to binary file
 fclose (DATfid);
@@ -206,8 +220,10 @@ toc;
 SMRxfname = sprintf ('%s\\%s.smrx', PL2fpath, PL2fname);
 [SMRxfhand] = CEDS64Create(SMRxfname, 400, 2);
 if SMRxfhand <= 0 
-        display (sprintf ('Polecenie CEDS64Create wyszuci³o b³¹d: %i', SMRxfhand)); 
-        Speak(SpeachObj, 'Coœ mi tu œmierdzi...');
+        display (sprintf ('Polecenie CEDS64Create wyszuci³o b³¹d: %i', SMRxfhand));
+        if CanItalk2U
+            Speak(SpeachObj, 'Fuck, something went really wrong...');
+        end;
         Posprzataj(SMRxfhand, PL2file);
         return;
 end
@@ -322,16 +338,21 @@ function Posprzataj(isOK, PL2file)
     NET.addAssembly('System.Speech');   % ponowne udzielenie g³osu
     SpeachObj = System.Speech.Synthesis.SpeechSynthesizer;
     SpeachObj.Volume = 100;
+    SpeachObj.SelectVoice('Microsoft Hazel Desktop'); % You need to add here the string corresponding to the right voice.
     fclose('all');              %close all the files
     CEDS64CloseAll();           %close all CED the files
     plx_close (PL2file);        %close all Plexon the files
     unloadlibrary ceds64int;    %unload ceds64int.dll
     toc
     if isOK >= 0
-        display ('Skoñczy³am :-)');
-        Speak(SpeachObj, 'Skarbie, ju¿ skoñczy³am');
+        display ('I am done :-)');
+        if CanItalk2U
+            Speak(SpeachObj, 'Darling, I am always happy to please You');
+        end
     else
-        display ('Skoñczy³am, ale nie jestem zadowolona :-(');
-        Speak(SpeachObj, 'Skarbie, ju¿ skoñczy³am ale nie jestem zadowolona');
+        display ('Darling, it was nice, but I am not fully satisfied');
+        if CanItalk2U
+            Speak(SpeachObj, 'Darling, it was really nice, but I am not fully satisfied');
+        end
     end
 end
