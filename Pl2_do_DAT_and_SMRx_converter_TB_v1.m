@@ -330,11 +330,11 @@ for i = 1:1:w
 end
 
 %% wezwij Leona
-Posprzataj(isOK, PL2file);
+Posprzataj(isOK, PL2file, CanItalk2U);
 clear;
 
 %% a na koniec Leon Zawodowiec
-function Posprzataj(isOK, PL2file)
+function Posprzataj(isOK, PL2file, CanItalk2U)
     NET.addAssembly('System.Speech');   % ponowne udzielenie g³osu
     SpeachObj = System.Speech.Synthesis.SpeechSynthesizer;
     SpeachObj.Volume = 100;
@@ -347,12 +347,12 @@ function Posprzataj(isOK, PL2file)
     if isOK >= 0
         display ('I am done :-)');
         if CanItalk2U
-            Speak(SpeachObj, 'Darling, I am always happy to please You');
+            Speak(SpeachObj, 'Darling, I am always happy to please You. Thank You, I am done.');
         end
     else
         display ('Darling, it was nice, but I am not fully satisfied');
         if CanItalk2U
-            Speak(SpeachObj, 'Darling, it was really nice, but I am not fully satisfied');
+            Speak(SpeachObj, 'Darling, it was really nice, but I am not fully satisfied. Is something bothering You?');
         end
     end
 end
