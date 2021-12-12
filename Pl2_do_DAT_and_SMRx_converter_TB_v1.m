@@ -2,41 +2,49 @@
 clc;
 clear;
 
-%% IMPORTANT INFORMATION read it first, you moron!
+%% IMPORTANT INFORMATION read it first!
 % This script converts Plexon's .pl2 file into binary .dat file (for Kilosort) and into Spike2 .smrx file
 % WARNING!!! - if FilterData = TRUE, it filters data (Butterworth, 4th order, 300-7500Hz)
-% WARNING!!! - if SubtractMean = TRUE, it substracts, from each channel, the mean of all channels.
-% % Only WB channels will go to binary .dat file
-% All channels will go to Spike2 .smrx file
+% WARNING!!! - if Subtract = 'mean' or 'median', it substracts, from each channel, the mean of median of:
+% all channels (SubtractBy = 'MEA') or channels on the same MES's shank (SubtractBy = 'SHK').
+% It is written for 32 channel MEA with configuration 4x8 (four shanks, 8 channels per shank) - it does metter
+% if You use SubtractBy = 'SHK'
+% Only WB channels will go to binary .dat file
+% All channels WB (optionally filtered and subtracted), AI, EVENT will go to Spike2 .smrx file
+% WARNING!!! - SPK, SPKC, FP and KBD channels are discarded - the script can be easly moddifed to includ it.
 
 FilterData = true;
 Subtract = 'median';  %'mean', 'median' oe 'none' - determines what (if anything) will be subtracted from signal on channels
-
 SubtractBy = 'MEA'; %'MEA', 'SHK' - determines if mean of wholle MEA or mean of Shanks is subtracted from channels (on shanks)
+smrxSPKCnoOffset = 0;   % WB (after optional processing) channells' numbering offset for Spike2 file
+smrxAInoOffset = 100;   % AI channells' numbering offset for Spike2 file
 
-smrxSPKCnoOffset = 0;   %z tum offsetem bêda numerowane kana³y SPKC (pochodne WB)
-smrxAInoOffset = 100;   %z tum offsetem bêda numerowane kana³y AI 
+CanItalk2U = true;
 
-%% Stwórz kobietê!
-NET.addAssembly('System.Speech');
-SpeachObj = System.Speech.Synthesis.SpeechSynthesizer;
-SpeachObj.Volume = 100;
+%% Create woman voice
+if CanItalk2U
+    NET.addAssembly('System.Speech');
+    SpeachObj = System.Speech.Synthesis.SpeechSynthesizer;
+    SpeachObj.Volume = 100;
+end
 
-%% wcztaj bibliotekê CED
+%% read CEDMATLAB librairy
 CEDS64LoadLib('C:\Program Files\MATLAB\R2018a\toolbox\CEDMATLAB\CEDS64ML'); 
 
 %% Show me the .pl2 file
-Speak(SpeachObj, 'Kotek, wskarz mi plik pl2 do przekonwertowania na plik binarny dat dla kilosorta i smrx dla spajka');
+if CanItalk2U
+    Speak(SpeachObj, 'Kotek, wskarz mi plik pl2 do przekonwertowania na plik binarny dat dla kilosorta i smrx dla spajka');
+end    
 [PL2fullfname, PL2fpath] = uigetfile ('*.pl2', 'Select .pl2 file');  %wska¿ plik .pl2
 PL2file = fullfile (PL2fpath, PL2fullfname);
 [~, PL2fname, ~] = fileparts(PL2file);
 PL2info = PL2GetFileIndex (PL2file);    % gather info about content of .pl2 file
 
-fprintf('Przerabiam plik %s PLEXONa do pliku binarnego.\n', PL2fullfname);
+fprintf('I have starded to convert %s file to .dat and .smrx files.\n', PL2fullfname);
 
-tic; % let's see how slow You are :-)
+tic; % let's see how slow I am :-)
 
-%% Pozbieraj info o tym co jest w kolejnych kana³ach i wci¹gnij dane
+%% Get info about content of channels and gather data
 nAnalogChannels = PL2info.TotalNumberOfAnalogChannels;
 nEventChannels = PL2info.NumberOfEventChannels;
 infoWBchannels = {};
@@ -45,7 +53,7 @@ infoAIchannels = {};
 infoSingleBitEVNTchannels = {};
 infoKbdEVNTchannels = {};
 
-% najpierw info o kana³ach analogowych: WB, FP, AI
+% first analog channels: WB, SPKC, FP, AI
 for i = 1:nAnalogChannels
     switch PL2info.AnalogChannels{i, 1}.SourceName
         case 'WB'
@@ -81,7 +89,7 @@ for i = 1:nAnalogChannels
     end
 end
 
-% teraz info o kana³ach zdarzeñ KBD, Single-bit events
+% next KBD, Single-bit events channels
 for i = 1:nEventChannels
     switch PL2info.EventChannels{i, 1}.SourceName
         case 'KBD'
@@ -102,8 +110,8 @@ for i = 1:nEventChannels
 end
 
 %% Get raw data from WB channels
-% preallocate for speed (przedmuchaj nos)
-nSampliPerCh = infoWBchannels{1, 4};  % assume that all Chanls are like 1st analague Chanl
+% preallocate for speed 
+nSampliPerCh = infoWBchannels{1, 4};  % assume that all WB channels are like 1st WB channel
 [nchannels, ~] = size(infoWBchannels);
 rawWBdata = zeros(nSampliPerCh, nchannels);
 for i = 1:nchannels
@@ -113,8 +121,8 @@ for i = 1:nchannels
 end
 
 %% Get raw data from AI channels
-% preallocate for speed (przedmuchaj nos)
-nSampliPerCh = infoAIchannels{1, 4};  % let's assume that all WB chanls are like 1st WB analag channel
+% preallocate for speed 
+nSampliPerCh = infoAIchannels{1, 4};  % let's assume that all AI chanls are like 1st AI channel
 [nchannels, ~] = size(infoAIchannels);
 rawAIdata = zeros(nSampliPerCh, nchannels);
 for i = 1:nchannels
